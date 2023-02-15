@@ -3,7 +3,7 @@ import json, os, sys, csv
 from itertools import product
 from functools import lru_cache, cached_property
 
-SCRIPT_DIR = os.path.dirname(__file__) if __name__ != "__main__" else "./"
+SCRIPT_DIR = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(SCRIPT_DIR, "..", "..")) # models and clue is here
 
 import models.models_data
