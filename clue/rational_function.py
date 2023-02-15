@@ -63,7 +63,6 @@ class SparsePolynomial(object):
             >>> simplify(parse_expr(str(sp)) - parsed) == 0
             True
     '''
-
     def __init__(self, varnames, domain=QQ, data=None, cast=True):
         self._varnames = varnames
         self._domain = domain
@@ -1110,6 +1109,7 @@ class SparsePolynomial(object):
 
     @staticmethod
     def from_sympy(sympy_poly, varnames=None):
+        r'''Static method inverse to :func:`to_sympy`'''
         domain = sympy_poly.ring.domain
         # lambda used to handle the case of the algebraic field of coefficients
         if(varnames is None):
@@ -1122,6 +1122,13 @@ class SparsePolynomial(object):
                 if monom[i]:
                     new_monom.append((i, monom[i]))
             data[tuple(new_monom)] = coef
+        return SparsePolynomial(varnames, domain, data)
+
+    @staticmethod
+    def from_list(list, varnames=None, domain=QQ):
+        r'''Static method inverse to :func:`linear_part_as_vec`'''
+        if len(list) != len(varnames): raise TypeError(f"The list must have as many elements ({len(list)}) as variables ({len(varnames)})")
+        data = {((i,1),) : el for i,el in enumerate(list) if el != 0}
         return SparsePolynomial(varnames, domain, data)
 
     #--------------------------------------------------------------------------

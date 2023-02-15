@@ -211,6 +211,20 @@ class FODESystem:
 
         return FODESystem(new_eqs, new_obs, system.variables, new_ic, new_name)
 
+    @staticmethod
+    def LinearSystem(matrix : list[list[Any]] | ndarray, observables=None, variables = None, ic={}, name = None):
+        if not isinstance(matrix, ndarray):
+            matrix = array(matrix)
+
+        if len(matrix.shape) != 2 or (matrix.shape[0] != matrix.shape[1]):
+            raise TypeError("The given matrix is not a square matrix and can not define a differential system")
+        variables = [f"x{i}" for i in range(len(matrix))] if variables is None else variables
+        if len(variables) != len(matrix):
+            raise ValueError("The number of variables must match the size of the matrix")
+
+        equations = [SparsePolynomial.from_list(list(row), variables) for row in matrix]
+        return FODESystem(equations, observables, variables, ic, name)
+
     # Getters of attributes
     @property
     def equations(self): return self._equations
