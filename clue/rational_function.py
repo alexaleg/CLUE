@@ -17,7 +17,7 @@ from pyparsing import (
 import sympy
 from sympy import QQ, oo, sympify
 
-from clue.nual import NualNumber
+from .nual import NualNumber
 
 #------------------------------------------------------------------------------
 
@@ -1125,10 +1125,17 @@ class SparsePolynomial(object):
         return SparsePolynomial(varnames, domain, data)
 
     @staticmethod
-    def from_list(list, varnames=None, domain=QQ):
+    def from_vector(vector, varnames=None, domain=QQ):
         r'''Static method inverse to :func:`linear_part_as_vec`'''
-        if len(list) != len(varnames): raise TypeError(f"The list must have as many elements ({len(list)}) as variables ({len(varnames)})")
-        data = {((i,1),) : el for i,el in enumerate(list) if el != 0}
+        from .linalg import SparseVector
+
+        if isinstance(vector, SparseVector):
+            if len(varnames) != vector.dim: raise TypeError(f"The list must have as many elements ({len(vector)}) as variables ({len(varnames)})")
+            domain = vector.field
+            data = {((i,1),) : vector[i] for i in vector.nonzero}
+        else:
+            if len(vector) != len(varnames): raise TypeError(f"The list must have as many elements ({len(vector)}) as variables ({len(varnames)})")
+            data = {((i,1),) : el for i,el in enumerate(list) if el != 0}
         return SparsePolynomial(varnames, domain, data)
 
     #--------------------------------------------------------------------------

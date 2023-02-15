@@ -207,22 +207,22 @@ class FODESystem:
         ## Initial conditions
         new_ic = {key : noise(val) for (key,val) in system.ic.items()} if system.ic != None else None
         ## Name
-        new_name = f"Pertubed system{f' [{system.name}]' if system.name != None else ''}"
+        new_name = f"Perturbed system{f' [{system.name}]' if system.name != None else ''}"
 
         return FODESystem(new_eqs, new_obs, system.variables, new_ic, new_name)
 
     @staticmethod
-    def LinearSystem(matrix : list[list[Any]] | ndarray, observables=None, variables = None, ic={}, name = None):
-        if not isinstance(matrix, ndarray):
-            matrix = array(matrix)
+    def LinearSystem(matrix : SparseRowMatrix, observables=None, variables = None, ic={}, name = None):
+        if not isinstance(matrix, SparseRowMatrix):
+            raise TypeError("The matrix must be given in SparseRowMatrix format")
 
-        if len(matrix.shape) != 2 or (matrix.shape[0] != matrix.shape[1]):
+        if matrix.nrows != matrix.ncols:
             raise TypeError("The given matrix is not a square matrix and can not define a differential system")
-        variables = [f"x{i}" for i in range(len(matrix))] if variables is None else variables
-        if len(variables) != len(matrix):
+        variables = [f"x{i}" for i in range(matrix.nrows)] if variables is None else variables
+        if len(variables) != matrix.nrows:
             raise ValueError("The number of variables must match the size of the matrix")
 
-        equations = [SparsePolynomial.from_list(list(row), variables) for row in matrix]
+        equations = [SparsePolynomial.from_vector(matrix.row(i), variables) for i in range(len(variables))]
         return FODESystem(equations, observables, variables, ic, name)
 
     # Getters of attributes
