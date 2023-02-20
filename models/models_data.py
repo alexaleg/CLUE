@@ -90,7 +90,7 @@ class Model:
             remote = self.remote
             if remote["where"] == "Networks-Skewed":
                 from clue.networks_skewed import FromNetwork
-                model = remote["model"]; name = remote["name"]; column = remote["column"]
+                model = remote["model"]; name = remote["name"]; column = remote.get("column", -1)
                 return FromNetwork(model, name, column, **kwds)
         elif(os.path.exists(self.path(range))): # the model is local
             from clue import FODESystem
