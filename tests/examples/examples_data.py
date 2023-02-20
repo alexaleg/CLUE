@@ -318,18 +318,21 @@ def compile_results(*argv):
         print(f"[example_data - compile] Compiling data from {name} ({read=} -- {matrix=})")
         data = {} 
         data["observables"] = {}
+        default_data = {
+            'size': "oo", 'lumped': "oo", 'ratio': "NaN", "time": "oo",
+            "unweighted": "Not computed", "positive": "Not computed", "disjoint": "Not computed", "reducing": "Not computed",
+            "FL": "Not computed", "FE": "Not computed", "RWE": "Not computed", "RWE_has": "Not computed"
+        }
         try:
             with open(examples[name].results_path()) as file:
-                line = file.readline()
+                line = file.readline().strip()
                 while line != "":
-                    line = line.strip()
                     if line.startswith("==============================================="): # starting example
-                        line = file.readline()
+                        line = file.readline().strip()
                         if line == "": raise ValueError("The result file if not well formatted") # unexpected end of file
-                        line = line.strip()
                         if line.startswith("== Observables: "): # one example
                             obs_set = line.removeprefix("== Observables: ")
-                            data["observables"][obs_set] = {}
+                            data["observables"][obs_set] = {**default_data}
                             line = file.readline()
                             while(not line.startswith("###############################################")):
                                 if line == "": raise ValueError("The result file if not well formatted") # unexpected end of file
@@ -365,25 +368,6 @@ def compile_results(*argv):
                                 elif line.startswith("Timeout error detected: "): # an error of size in execution
                                     data["observables"][obs_set]["time"] = f">{line.removeprefix('The size of the reduced model is')}"
                                 line = file.readline()
-                            ### Filling fields if not given
-                            # LUMPING AND EXECUTION DATA
-                            if  not "size" in data["observables"][obs_set]: data["observables"][obs_set]["size"] = "oo"
-                            if  not "lumped" in data["observables"][obs_set]: data["observables"][obs_set]["lumped"] = "oo"
-                            if  not "time" in data["observables"][obs_set]: data["observables"][obs_set]["time"] = "oo"
-                            if isinstance(data["observables"][obs_set]["size"], str) or isinstance(data["observables"][obs_set]["lumped"], str):
-                                data["observables"][obs_set]["ratio"] = "NaN"
-                            else:
-                                data["observables"][obs_set]["ratio"] = data["observables"][obs_set]["lumped"]/data["observables"][obs_set]["size"]
-                            # LUMPING PROPERTIES
-                            if  not "unweighted" in data["observables"][obs_set]: data["observables"][obs_set]["unweighted"] = "Not computed"
-                            if  not "positive" in data["observables"][obs_set]: data["observables"][obs_set]["positive"] = "Not computed"
-                            if  not "disjoint" in data["observables"][obs_set]: data["observables"][obs_set]["disjoint"] = "Not computed"
-                            if  not "reducing" in data["observables"][obs_set]: data["observables"][obs_set]["reducing"] = "Not computed"
-                            # LUMPING TYPES
-                            if  not "FL" in data["observables"][obs_set]: data["observables"][obs_set]["FL"] = "Not computed"
-                            if  not "FE" in data["observables"][obs_set]: data["observables"][obs_set]["FE"] = "Not computed"
-                            if  not "RWE" in data["observables"][obs_set]: data["observables"][obs_set]["RWE"] = "Not computed"
-                            if  not "RWE_has" in data["observables"][obs_set]: data["observables"][obs_set]["RWE_has"] = "Not computed"
                             line = file.readline()
                         elif line.startswith("== END OF EXAMPLES"): # last section of the file with general information
                             line = file.readline()
@@ -399,10 +383,21 @@ def compile_results(*argv):
                             if not "read_time" in data: data["read_time"] = "oo"
                             if not "matrix_time" in data: data["read_time"] = "oo"
                             if not "total_time" in data: data["read_time"] = "oo"
+                    elif line.startswith("Timeout while reading"):
+                        data["observables"]["Unknown"] = {**default_data}
+                        data["read_time"] = "oo"; data["matrix_time"] = "oo"; data["total_time"] = "oo"
+                        line = file.readline().strip()
+                    elif line.startswith("Timeout while building the matrices"):
+                        data["observables"]["Unknown"] = {**default_data}
+                        data["read_time"] = float(file.readline().removeprefix("Time for reading the model: "))
+                        data["matrix_time"] = "oo"; data["total_time"] = "oo"
+                        line = file.readline().strip()
+                    else:
+                        line = file.readline().strip()
 
             compiled_data[(name, read, matrix)] = data
-        except ValueError:
-            print(f"[example_data - compile] ERROR {name} ({read=} -- {matrix=}): file with bad format")
+        except ValueError as error:
+            print(f"[example_data - compile] ERROR {name} ({read=} -- {matrix=}): {error}")
 
     ## Writing the csv file
     print(f"[example_data - compile] Putting data into CSV file...")
@@ -426,8 +421,8 @@ def compile_results(*argv):
                         values["FL"], values["FE"], values["RWE"], values["RWE_has"],
                         obs_set
                     ])
-                except KeyError:
-                    print(f"[example_data - compile] ERROR - an error with a key ({name} -- {read} -- {matrix})")
+                except KeyError as error:
+                    print(f"[example_data - compile] ERROR - an error with a key ({name} -- {read} -- {matrix}): {error}")
         print(f"[example_data - compile] Compilation complete")
 
 ## Script area
