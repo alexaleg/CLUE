@@ -7,7 +7,7 @@ SCRIPT_DIR = os.path.dirname(__file__)
 sys.path.insert(0, os.path.join(SCRIPT_DIR, "..", "..")) # models and clue is here
 
 import models.models_data
-from clue import FODESystem
+from typing import TextIO
 
 VALID_READ = ["polynomial", "rational", "sympy", "uncertain"]
 VALID_MATRIX = ["polynomial", "rational", "auto_diff"]
@@ -126,6 +126,40 @@ executed_examples = [
 def get_example(name):
     return examples[name]
 
+def __read_parameters(file: TextIO):
+    line = file.readline().strip()
+    parameters = []
+    while line != "end parameters":
+        if line == "": raise IOError("End of file detected within block of parameters")
+        parameters.append(line.split("=")[0].strip())
+        line = file.readline().strip()
+    
+    return parameters
+
+def __read_init(file: TextIO):
+    line = file.readline().strip()
+    variables = []
+    while line != "end init":
+        if line == "": raise IOError("End of file detected within block of init")
+        variables.append(line.split("=")[0].strip())
+        line = file.readline().strip()
+    
+    return variables
+
+def read_variables_from_system(path:str) -> list[str]:
+    with open(path, "r") as file:
+        line = file.readline().strip()
+        parameters = []; variables = []; not_params = True; not_init = True
+        while line != "" and (not_params or not_init):
+            if line.startswith("begin parameters"):
+                parameters = __read_parameters(file)
+                not_params = False
+            if line.startswith("begin init"):
+                variables = __read_init(file)
+                not_init = False
+            line = file.readline().strip()
+    return variables + parameters
+        
 ############################################################
 ### SCRIPT METHODS
 ############################################################
@@ -219,32 +253,28 @@ def add_examples_in_folder(*argv):
 
     if "uncertain" in read and any(m != "polynomial" for m in matrix):
         raise TypeError("Found an 'uncertain' approach with a method for matrices different than 'polynomial'")
-    if "uncertain" in read:
-        read.pop(read.index("uncertain"))
-        read.append("uncertain-abs")
-        read.append("uncertain-prop")
 
     changed = False
     for (name, model) in models.models_data.models.items():
         if model.folder() in folders: # this model must be added
             # checking we can do everything
-            if ("uncertain-abs" in read or "uncertain-prop" in read) and model.type == "rational":
+            if "uncertain" in read and model.type == "rational":
                 raise TypeError("Found a 'rational' model and required an 'uncertain'")
 
             print(f"## Processing examples for model {name}".ljust(100, "."))
-            system = FODESystem(file = model.path(), parser = "polynomial" if model.type == "polynomial" else "sympy")
+            system_variables = read_variables_from_system(model.path())
             ## Deciding observables
             print(f"### Deciding observables (criteria {O=})")
             obs = []
             if O in ("first", "all") :
                 print(f"#### Adding the first variable as observable")
-                obs.append([str(system.symb_variables()[0])])
+                obs.append([system_variables[0]])
             if O in ("sum", "all"):
                 print(f"#### Adding the sum of everything as observable")
-                obs.append([" + ".join(system.variables)])
+                obs.append([" + ".join(system_variables)])
             if O in ("alone", "all"):
                 print(f"#### Adding all variables alone as observables")
-                obs.extend([[str(system.symb_variables()[i])] for i in range(0 if O == "alone" else 1, system.size)])
+                obs.extend([[system_variables[i]] for i in range(0 if O == "alone" else 1, len(system_variables))])
 
             print(f"### Found {len(obs)} set of observables")
 
@@ -256,7 +286,7 @@ def add_examples_in_folder(*argv):
                     for m in matrix:
                         # Deciding the final name of the example
                         extra = []
-                        if name in examples: extra.append(r)
+                        if name in examples and examples[name].read != r: extra.append(r)
                         if X != None: extra.append(X)
                         extra = f"[{'#'.join(extra)}]" if len(extra) > 0 else ''
                         final_name = f"{name}{extra}"
@@ -265,8 +295,7 @@ def add_examples_in_folder(*argv):
                         if final_name != name: kwds["model"] = name
                         if o != None: kwds["out_folder"] = o
                         if X != None: kwds["range"] = X
-                        if r == "uncertain-abs": kwds["delta"] = 2.5e-4; kwds["unc_type"] = "abs"; r = "uncertain"
-                        if r == "uncertain-prop": kwds["delta"] = 0.1; kwds["unc_type"] = "prop"; r = "uncertain"
+                        if r == "uncertain": kwds["delta"] = 0.1; kwds["unc_type"] = "prop"
                         
                         if (not final_name in examples) or subs:
                             examples[final_name] = Example(final_name, r, m, obs, **kwds)
