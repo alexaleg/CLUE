@@ -127,6 +127,7 @@ class FODESystem:
         self.__matrices_subspace_kwds = kwds.get("matrices_subspace_kwds", {})
         self.__lumping_subspace_class = kwds.get("lumping_subspace", Subspace)
         self.__lumping_subspace_kwds = kwds.get("lumping_subspace_kwds", {})
+        self.__linear_part = kwds.get("linear_part", None)
 
         self._lumping_matr = {}
         self.__normalize_input = False
@@ -223,7 +224,7 @@ class FODESystem:
             raise ValueError("The number of variables must match the size of the matrix")
 
         equations = [SparsePolynomial.from_vector(matrix.row(i), variables) for i in range(len(variables))]
-        return FODESystem(equations, observables, variables, ic, name)
+        return FODESystem(equations, observables, variables, ic, name, linear_part=matrix)
 
     # Getters of attributes
     @property
@@ -350,6 +351,13 @@ class FODESystem:
     def type(self):
         self.normalize()
         return type(self.equations[0])
+
+    def linear_part(self) -> SparseRowMatrix:
+        r'''Build a matrix with the linear part of the equations'''
+        if self.__linear_part == None:
+            self.normalize()
+            self.__linear_part = FODESystem.evaluate_jacobian(self.equations, self.variables, self.field, [0 for _ in range(self.size)]).transpose()
+        return self.__linear_part
 
     @lru_cache(maxsize=1)
     def is_linear_system(self):
@@ -1905,7 +1913,7 @@ class FODESystem:
         field = self.field
         vectors_to_include = []
         for linear_form in observable:
-            vec = SparseVector.from_list(linear_form, field)
+            vec = linear_form if isinstance(linear_form, SparseVector) else SparseVector.from_list(linear_form, field)
             vectors_to_include.append(vec)
         logger.debug(":ilumping: Computing the lumping subspace...")
         start = time.time()
