@@ -85,6 +85,20 @@ class Model:
 
         return self.name, json
 
+    def load_system(self, parser="polynomial", range=None):
+        if hasattr(self, "remote"):
+            remote = self.remote
+            if remote["where"] == "Networks-Skewed":
+                from clue.networks_skewed import FromNetwork
+                model = remote["model"]; name = remote["name"]; column = remote["column"]
+                return FromNetwork(model, name, column)
+        elif(os.path.exists(self.path(range))): # the model is local
+            from clue import FODESystem
+            return FODESystem(file=self.path(range), parser=parser)
+        else: # impossible to find the model
+            raise FileNotFoundError(f"Unable to load the model {self.name}")
+
+
 script_dir = os.path.dirname(__file__) if __name__ != "__main__" else "./"
 with open(os.path.join(script_dir,'data.json')) as f:
     data = json.load(f)
