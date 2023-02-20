@@ -23,8 +23,6 @@ from sympy.ntheory.modular import isprime
 from sympy.polys.domains.domain import Domain
 from sympy.polys.fields import FracElement
 
-from .rational_function import RationalFunction, SparsePolynomial
-
 logger = logging.getLogger(__name__)
 
 # the constant responsible for switching to the modular algorithm
@@ -528,9 +526,9 @@ class SparseRowMatrix(object):
 
     def __setitem__(self, cell : tuple[int,int] | list[int], value):
         i, j = cell
-        if(i < 0 and i >= self.nrows):
+        if(i < 0 or i >= self.nrows):
             raise IndexError(f"Row {i} out of dimension")
-        if(j < 0 and j >= self.ncols):
+        if(j < 0 or j >= self.ncols):
             raise IndexError(f"Column {j} out of dimension")
         
         if i in self.nonzero:
@@ -542,6 +540,27 @@ class SparseRowMatrix(object):
             self.nonzero.add(i)
             self.__data[i] = SparseVector(self.ncols, self.field)
             self.__data[i][j] = value
+
+    def set_row(self, i, new_row):
+        if not isinstance(new_row, SparseVector) or new_row.dim != self.ncols:
+            raise TypeError(f"The given row is not of valid format. A SparseVector is required of dimension {self.ncols}")
+        if(i < 0 or i >= self.nrows):
+            raise IndexError(f"Row {i} out of dimension")
+
+        if new_row.is_zero() and i in self.nonzero:
+            del self.__data[i]
+            self.nonzero.remove(i)
+        elif not new_row.is_zero():
+            self.nonzero.add(i)
+            self.__data[i] = new_row
+
+    def set_col(self, j, new_col):
+        if not isinstance(new_col, SparseVector) or new_col.dim != self.nrows:
+            raise TypeError(f"The given column is not of valid format. A SparseVector is required of dimension {self.nrows}")
+        if(j < 0 or j >= self.ncols):
+            raise IndexError(f"Column {j} out of dimension")
+        for i in range(self.nrows):
+            self[i,j] = new_col[i]
          
     #--------------------------------------------------------------------------
 
@@ -938,6 +957,7 @@ class Subspace(object):
           rhs (SparsePolynomial or RationalFunction) to the subspace
           new_vars_name (optional) - the name for variables in the lumped polynomials
         """
+        from .rational_function import RationalFunction, SparsePolynomial
         #old_vars = rhs[0].gens
         #domain = rhs[0].domain
         new_vars = [new_vars_name + str(i) for i in range(self.dim())]
@@ -1200,6 +1220,7 @@ class OrthogonalSubspace(Subspace):
         return list(range(len(self.echelon_form)))
 
     def perform_change_of_variables(self, rhs, old_vars, domain, new_vars_name='y'):
+        from .rational_function import SparsePolynomial, RationalFunction
         n = self.ambient_dimension(); m = self.dim()
         new_vars = [new_vars_name + str(i) for i in range(m)]
         # we build the matrix of the space and its pseudoinverse
