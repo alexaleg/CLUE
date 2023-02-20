@@ -79,6 +79,7 @@ class UncertainFODESystem(FODESystem):
     ):
         ## getting equations of the system
         equations = equations if equations != None else (dic.pop("equations", None) if dic != None else None)
+        by_matrix = False
         if equations == None:
             variables = variables if variables != None else (dic.pop("variables", None) if dic != None else None)
             matrices = matrices if matrices != None else (dic.pop("matrices", None) if dic != None else None)
@@ -87,8 +88,9 @@ class UncertainFODESystem(FODESystem):
             if matrices == None:
                 raise TypeError("Not enough information provided to determine the equations of a Uncertain System")
             m,M = matrices
+            by_matrix = True
             if isinstance(m, SparseRowMatrix):
-                equations = [(SparsePolynomial.from_vector(m[i], variables), SparsePolynomial.from_vector(M[i], variables)) for i in range(len(variables))]
+                equations = [(SparsePolynomial.from_vector(m.row(i), variables), SparsePolynomial.from_vector(M.row(i), variables)) for i in range(len(variables))]
             else:
                 symb_vars = [SparsePolynomial.from_string(v, variables) for v in variables]
                 equations = [(sum(m[j,i]*symb_vars[j] for j in range(len(variables))), sum(M[j][i]*symb_vars[j] for j in range(len(variables))))  
@@ -105,11 +107,17 @@ class UncertainFODESystem(FODESystem):
         lower_equations = self.lower_equations
         upper_equations = self.upper_equations
         
-        m = SparseRowMatrix(self.size, self.field)
-        M = SparseRowMatrix(self.size, self.field)
-        for i in range(self.size):
-            m.set_row(i, lower_equations[i].linear_part_as_vec())
-            M.set_row(i, upper_equations[i].linear_part_as_vec())
+        if not by_matrix:
+            m = SparseRowMatrix(self.size, self.field)
+            M = SparseRowMatrix(self.size, self.field)
+            for i in range(self.size):
+                if lower_equations[i] != 0:
+                    m.set_row(i, lower_equations[i].linear_part_as_vec())
+                if upper_equations[i] != 0:
+                    M.set_row(i, upper_equations[i].linear_part_as_vec())
+        elif not isinstance(m, SparseRowMatrix):
+            m = SparseRowMatrix.from_list(m, self.field)
+            M = SparseRowMatrix.from_list(M, self.field)
         self._lumping_matr["polynomial"] = [m,M]
 
     @property
