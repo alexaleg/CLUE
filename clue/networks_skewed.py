@@ -51,7 +51,6 @@ def FromNetwork(network, name=None, column = -1, undirected=None, adjacency=True
                 degree += row[j]
             equations.increment(i,i, -degree)
     logger.info(f"[FromNetwork] Building differential system...")
-    equations = [SparsePolynomial.from_vector(row, varnames) for row in equations]
-    system = FODESystem(equations, variables=varnames)
+    system = FODESystem.LinearSystem(equations, variables=varnames,name=f"{network}_{name}")
     logger.info("[FromNetwork] Returning differential system")
     return system
