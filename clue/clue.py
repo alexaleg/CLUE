@@ -213,7 +213,7 @@ class FODESystem:
         return FODESystem(new_eqs, new_obs, system.variables, new_ic, new_name)
 
     @staticmethod
-    def LinearSystem(matrix : SparseRowMatrix, observables=None, variables = None, ic={}, name = None):
+    def LinearSystem(matrix : SparseRowMatrix, observables=None, variables = None, ic={}, name = None, **kwds):
         if not isinstance(matrix, SparseRowMatrix):
             raise TypeError("The matrix must be given in SparseRowMatrix format")
 
@@ -224,7 +224,7 @@ class FODESystem:
             raise ValueError("The number of variables must match the size of the matrix")
 
         equations = [SparsePolynomial.from_vector(matrix.row(i), variables) for i in range(len(variables))]
-        return FODESystem(equations, observables, variables, ic, name, linear_part=matrix)
+        return FODESystem(equations, observables, variables, ic, name, linear_part=matrix, **kwds)
 
     # Getters of attributes
     @property
