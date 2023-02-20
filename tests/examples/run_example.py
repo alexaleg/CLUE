@@ -84,10 +84,10 @@ if __name__ == "__main__":
                 read_time = time.time()
                 ## now we can run the model properly
                 if read == "uncertain":
-                    system = FODESystem(file=example.path_model(), parser="polynomial", lumping_subspace=subs_class)
+                    system = example.get_model().load_system(parser="polynomial", range=example.range, lumping_subspace=subs_class)
                     system = UncertainFODESystem.from_FODESystem(system, example.delta, type=example.unc_type)
                 else:
-                    system = FODESystem(file=example.path_model(), parser=read, lumping_subspace=subs_class)
+                    system = example.get_model().load_system(parser=read, range=example.range, lumping_subspace=subs_class)
                 read_time = time.time() - read_time
         except TimeoutError:
             print(f"[run_example] Timeout ({timeout}) on {example.name} ({read=})", flush=True)
