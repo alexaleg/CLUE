@@ -16,7 +16,7 @@ import copy, logging, math, sympy
 
 from collections import deque
 
-from itertools import combinations
+from itertools import combinations, product
 
 from sympy import GF, QQ, gcd, nextprime, symbols
 from sympy.ntheory.modular import isprime
@@ -490,6 +490,14 @@ class SparseRowMatrix(object):
         self.__data : dict[int, SparseVector] = dict()
         self.nonzero : set[int] = set()
         self.field : Domain = field
+
+    @classmethod
+    def from_list(cls, entries_list : list | tuple, field : Domain = QQ):
+        r'''Method to build a new :class:`SparseRowMatrix` from a dense representation (i.e., a list or tuple)'''
+        result = cls(len(entries_list), field)
+        for i, j in product(range(len(entries_list), repeat=2)):
+            result.increment(i,j, field.convert(entries_list[i][j]))
+        return result
 
     @property
     def dim(self): return self.nrows, self.ncols
