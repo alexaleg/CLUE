@@ -8,7 +8,7 @@ from .rational_function import SparsePolynomial
 
 logger = logging.getLogger(__name__)
 
-def FromNetwork(network, name=None, column = -1, undirected=None, adjacency=True, coercion_error=False):
+def FromNetwork(network, name=None, column = -1, undirected=None, adjacency=True, coercion_error=False, **kwds):
     logger.info(f"[FromNetwork] Reaching the website for the model {network}_{name}...",)
     r = requests.get(f"https://networks.skewed.de/api/net/{network}").json()
     name = r["nets"][0] if name is None else name
@@ -26,7 +26,16 @@ def FromNetwork(network, name=None, column = -1, undirected=None, adjacency=True
     logger.info("[FromNetwork] Reading edges...")
     edges = pandas.read_csv(io.BytesIO(graph_zip.read("edges.csv")), delimiter=",")
     logger.info("[FromNetwork] Creating variable names...")
-    varnames = vertices[vertices.columns[1]].tolist()
+    name_index = None
+    for i,column_name in enumerate(vertices.columns):
+        if any(pos_name in column_name for pos_name in ("name", "label", "meta")):
+            name_index=i; break
+    
+    varnames = vertices[vertices.columns[name_index]].tolist() if name_index != None else [f"S{i}" for i in range(len(vertices))]
+    if len(set(varnames)) < len(varnames): # repeated names --> better use generic
+        logger.warning(f"[FromNetwork] Found repeated names in the vertices. Using generic names")
+        varnames = [f"S{i}" for i in range(len(vertices))]
+
     logger.info(f"[FromNetwork] Building {'adjacency' if adjacency else 'laplacian'} matrix...")
     equations = SparseRowMatrix(len(varnames))
     if len(edges.columns) < 2: raise TypeError("The edges csv file is in incorrect format: too few columns")
@@ -51,6 +60,6 @@ def FromNetwork(network, name=None, column = -1, undirected=None, adjacency=True
                 degree += row[j]
             equations.increment(i,i, -degree)
     logger.info(f"[FromNetwork] Building differential system...")
-    system = FODESystem.LinearSystem(equations, variables=varnames,name=f"{network}_{name}")
+    system = FODESystem.LinearSystem(equations, variables=varnames,name=f"{network}_{name}",**kwds)
     logger.info("[FromNetwork] Returning differential system")
     return system
