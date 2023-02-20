@@ -262,26 +262,32 @@ def add_examples_in_folder(*argv):
                 raise TypeError("Found a 'rational' model and required an 'uncertain'")
 
             print(f"## Processing examples for model {name}".ljust(100, "."))
-            system_variables = read_variables_from_system(model.path())
-            ## Deciding observables
-            print(f"### Deciding observables (criteria {O=})")
-            obs = []
-            if O in ("first", "all") :
-                print(f"#### Adding the first variable as observable")
-                obs.append([system_variables[0]])
-            if O in ("sum", "all"):
-                print(f"#### Adding the sum of everything as observable")
-                obs.append([" + ".join(system_variables)])
-            if O in ("alone", "all"):
-                print(f"#### Adding all variables alone as observables")
-                obs.extend([[system_variables[i]] for i in range(0 if O == "alone" else 1, len(system_variables))])
-
-            print(f"### Found {len(obs)} set of observables")
 
             ## Deciding the range of the model (if exist)
             rng = model.range; rng = [None] if len(rng) == 0 else rng
             print(f"### {rng=} ; {read=} ; {matrix=}")
             for X in rng:
+                ## Reading the file and getting observables
+                try:
+                    system = model.load_system(parser=read[0], range=X)
+                    system_variables = system.species
+                except:
+                    system_variables = read_variables_from_system(model.path())
+                    
+                ## Deciding observables
+                print(f"### Deciding observables (criteria {O=})")
+                obs = []
+                if O in ("first", "all") :
+                    print(f"#### Adding the first variable as observable")
+                    obs.append([system_variables[0]])
+                if O in ("sum", "all"):
+                    print(f"#### Adding the sum of everything as observable")
+                    obs.append([" + ".join(system_variables)])
+                if O in ("alone", "all"):
+                    print(f"#### Adding all variables alone as observables")
+                    obs.extend([[system_variables[i]] for i in range(0 if O == "alone" else 1, len(system_variables))])
+
+                print(f"### Found {len(obs)} set of observables for range [{X}]")
                 for r in read:
                     for m in matrix:
                         # Deciding the final name of the example
