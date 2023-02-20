@@ -224,7 +224,9 @@ class FODESystem:
             raise ValueError("The number of variables must match the size of the matrix")
 
         equations = [SparsePolynomial.from_vector(matrix.row(i), variables) for i in range(len(variables))]
-        return FODESystem(equations, observables, variables, ic, name, linear_part=matrix, **kwds)
+        system = FODESystem(equations, observables, variables, ic, name, linear_part=matrix, **kwds)
+        system._lumping_matr["polynomial"] = [matrix] # the matrix for lumping is just the defining matrix
+        return system
 
     # Getters of attributes
     @property
