@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.join(SCRIPT_DIR, "..", "..")) # models and clue is he
 from contextlib import nullcontext
 from cProfile import Profile
 
-from clue import FODESystem, SparsePolynomial, Subspace, OrthogonalSubspace, UncertainFODESystem, UncertainLDESystem
+from clue import FODESystem, SparsePolynomial, Subspace, OrthogonalSubspace, UncertainFODESystem
 from examples_data import get_example #pylint: disable=import-error
 
 class Timeout(object):
@@ -113,6 +113,7 @@ if __name__ == "__main__":
             print(f"[run_example] Timeout ({timeout}) on {example.name} ({matrix=})", flush=True)
             print(f"Timeout error detected: {timeout}", file=file)
             print(f"Timeout while building the matrices", file=file)
+            print(f"Time for reading the model: {read_time}", file=file)
             # Closing the output file (if opened)
             if(not output in ("stdout", "stderr")):
                 file.close()
