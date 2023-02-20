@@ -365,11 +365,7 @@ class FODESystem:
         if not issubclass(self.type, SparsePolynomial):
             return False
 
-        for equation in self.all_equations():
-            if equation != 0:
-                if any((not equation.degree(v) in (0,1)) for v in self.variables):
-                    return False
-        return True
+        return all(equation.is_linear() for equation in self.all_equations())
 
     def all_equations(self):
         r'''
