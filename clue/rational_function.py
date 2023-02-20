@@ -17,6 +17,7 @@ from pyparsing import (
 import sympy
 from sympy import QQ, oo, sympify
 
+from .linalg import SparseVector
 from .nual import NualNumber
 
 #------------------------------------------------------------------------------
@@ -987,8 +988,12 @@ class SparsePolynomial(object):
 
     #--------------------------------------------------------------------------
 
-    def linear_part_as_vec(self):
-        return [self._data.get(((i, 1), ), self.domain(0)) for i in range(len(self.gens))]
+    def linear_part_as_vec(self) -> SparseVector:
+        out = SparseVector(len(self.gens),self.domain)
+        for i in range(len(self.gens)):
+            if ((i,1),) in self._data:
+                out[i] = self._data[((i,1),)]
+        return out
 
     #--------------------------------------------------------------------------
 
@@ -1501,6 +1506,12 @@ class RationalFunction:
     #--------------------------------------------------------------------------
     def get_constant(self):
         return self.numer.ct/self.denom.ct
+
+    def linear_part_as_vec(self) -> SparseVector:
+        constant_parts = self.automated_diff(**{v:0 for v in self.gens})
+        out = SparseVector(len(self.gens), self.domain)
+        for i in range(len(self.gens)): out[i] = constant_parts[i+1]
+        return out
 
     def get_sympy_ring(self):
         return sympy.polys.rings.ring(self.gens, self.domain)[0]
