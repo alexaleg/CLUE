@@ -376,6 +376,10 @@ def compile_results(*argv):
                                 elif line.startswith("Timeout error detected: "): # an error of size in execution
                                     data["observables"][obs_set]["time"] = f">{line.removeprefix('The size of the reduced model is')}"
                                 line = file.readline()
+
+                            ## Computing the ratio if possible
+                            if isinstance(data["observables"][obs_set]["size"], int) and isinstance(data["observables"][obs_set]["lumped"], int):
+                                data["observables"][obs_set]["ratio"] = data["observables"][obs_set]["lumped"]/data["observables"][obs_set]["size"]
                             line = file.readline()
                         elif line.startswith("== END OF EXAMPLES"): # last section of the file with general information
                             line = file.readline()
