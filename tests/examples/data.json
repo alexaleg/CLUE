@@ -28828,7 +28828,7 @@
         "matrix": "polynomial",
         "observables": [
             [
-                "S6"
+                "1213_i"
             ]
         ],
         "out_folder": "uncertain"
@@ -28838,7 +28838,7 @@
         "matrix": "polynomial",
         "observables": [
             [
-                "S6"
+                "1213_i"
             ]
         ],
         "out_folder": "uncertain",
@@ -28851,7 +28851,7 @@
         "matrix": "polynomial",
         "observables": [
             [
-                "S0"
+                "10553_i"
             ]
         ],
         "out_folder": "uncertain"
@@ -28861,7 +28861,7 @@
         "matrix": "polynomial",
         "observables": [
             [
-                "S0"
+                "10553_i"
             ]
         ],
         "out_folder": "uncertain",
@@ -28874,7 +28874,7 @@
         "matrix": "polynomial",
         "observables": [
             [
-                "S0"
+                "1030_i"
             ]
         ],
         "out_folder": "uncertain"
@@ -28884,7 +28884,7 @@
         "matrix": "polynomial",
         "observables": [
             [
-                "S0"
+                "1030_i"
             ]
         ],
         "out_folder": "uncertain",
@@ -28897,7 +28897,7 @@
         "matrix": "polynomial",
         "observables": [
             [
-                "S0"
+                "10045_i"
             ]
         ],
         "out_folder": "uncertain"
@@ -28907,7 +28907,7 @@
         "matrix": "polynomial",
         "observables": [
             [
-                "S0"
+                "10045_i"
             ]
         ],
         "out_folder": "uncertain",
@@ -28920,7 +28920,7 @@
         "matrix": "polynomial",
         "observables": [
             [
-                "S0"
+                "10074_i"
             ]
         ],
         "out_folder": "uncertain"
@@ -28930,7 +28930,7 @@
         "matrix": "polynomial",
         "observables": [
             [
-                "S0"
+                "10074_i"
             ]
         ],
         "out_folder": "uncertain",
@@ -30898,7 +30898,7 @@
         "matrix": "polynomial",
         "observables": [
             [
-                NaN
+                "S0"
             ]
         ],
         "out_folder": "uncertain"
@@ -30908,7 +30908,7 @@
         "matrix": "polynomial",
         "observables": [
             [
-                NaN
+                "S0"
             ]
         ],
         "out_folder": "uncertain",

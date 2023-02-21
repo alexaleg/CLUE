@@ -2045,7 +2045,12 @@
     },
     "us_agencies_montana": {
         "type": "polynomial",
-        "path": "WeightedLinearODE"
+        "path": "WeightedLinearODE", 
+        "remote": {
+            "where": "Networks-Skewed",
+            "model": "us_agencies",
+            "name": "montana"
+        }
     },
     "moviegalaxies_876": {
         "type": "polynomial",
@@ -2273,7 +2278,13 @@
     },
     "us_agencies_rhodeisland": {
         "type": "polynomial",
-        "path": "WeightedLinearODE"
+        "path": "WeightedLinearODE",
+        "remote": {
+            "where": "Networks-Skewed",
+            "model": "us_agencies",
+            "name": "rhodeisland",
+            "vertices_name": "default"
+        }
     },
     "dom_Rutberg_1986b": {
         "type": "polynomial",
@@ -5085,23 +5096,48 @@
     },
     "eu_procurements_alt_GR_2010": {
         "type": "polynomial",
-        "path": "WeightedLinearODE"
+        "path": "WeightedLinearODE",
+        "remote": {
+            "where": "Networks-Skewed",
+            "model": "eu_procurements_alt",
+            "name": "GR_2010"
+        }
     },
     "eu_procurements_alt_LV_2015": {
         "type": "polynomial",
-        "path": "WeightedLinearODE"
+        "path": "WeightedLinearODE",
+        "remote": {
+            "where": "Networks-Skewed",
+            "model": "eu_procurements_alt",
+            "name": "LV_2015"
+        }
     },
     "eu_procurements_alt_HU_2009": {
         "type": "polynomial",
-        "path": "WeightedLinearODE"
+        "path": "WeightedLinearODE",
+        "remote": {
+            "where": "Networks-Skewed",
+            "model": "eu_procurements_alt",
+            "name": "HU_2009"
+        }
     },
     "eu_procurements_alt_NO_2014": {
         "type": "polynomial",
-        "path": "WeightedLinearODE"
+        "path": "WeightedLinearODE",
+        "remote": {
+            "where": "Networks-Skewed",
+            "model": "eu_procurements_alt",
+            "name": "NO_2014"
+        }
     },
     "eu_procurements_alt_RO_2010": {
         "type": "polynomial",
-        "path": "WeightedLinearODE"
+        "path": "WeightedLinearODE",
+        "remote": {
+            "where": "Networks-Skewed",
+            "model": "eu_procurements_alt",
+            "name": "RO_2010"
+        }
     },
     "eu_procurements_alt_DE_2016": {
         "type": "polynomial",
@@ -5523,7 +5559,8 @@
         "remote": {
             "where": "Networks-Skewed",
             "model": "physics_collab",
-            "name": "arXiv"
+            "name": "arXiv",
+            "vertices_name": "default"
         }
     },
     "eu_procurements_alt_ES_2012": {
