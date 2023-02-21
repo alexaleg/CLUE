@@ -327,7 +327,7 @@ def compile_results(*argv):
         default_data = {
             'size': "oo", 'lumped': "oo", 'ratio': "NaN", "time": "oo",
             "unweighted": "Not computed", "positive": "Not computed", "disjoint": "Not computed", "reducing": "Not computed",
-            "FL": "Not computed", "FE": "Not computed", "RWE": "Not computed", "RWE_has": "Not computed"
+            "weighted_model": "Not computed", "FL": "Not computed", "FE": "Not computed", "RWE": "Not computed", "RWE_has": "Not computed"
         }
         try:
             with open(examples[name].results_path()) as file:
@@ -360,6 +360,8 @@ def compile_results(*argv):
                                 elif line.startswith("Is the lumping reducing?"):
                                     data["observables"][obs_set]["reducing"] = "Yes" if "True" in line else "No"
                                 ### READING LUMPING TYPES
+                                elif line.startswith("Is the model weighted?: "):
+                                    data["observables"][obs_set]["weighted_model"] = "Yes" if "True" in line else "No"
                                 elif line.startswith("Is the lumping a Forward Lumping (FL)?"):
                                     data["observables"][obs_set]["FL"] = "Yes" if "True" in line else "No"
                                 elif line.startswith("Is the lumping a Forward Equivalence (FE)?"):
@@ -412,7 +414,7 @@ def compile_results(*argv):
             "Name", "Read Alg.", "Time reading", "Matrix Alg.", "Time w/ matrices", # execution data
             "Or. size", "Lmp. size", "Red. ratio", "Time (s)", # lumping execution
             "Unweighted", "Positive", "Disjoint", "Reducing", # lumping properties
-            "Is FL?", "Is FE?", "Is RWE?", "Has RWE?", # lumping types
+            "Weighted model?", "Is FL?", "Is FE?", "Is RWE?", "Has RWE?", # lumping types
             "Observables" # observables used
         ]
         writer = csv.writer(file, delimiter=";")
@@ -424,7 +426,7 @@ def compile_results(*argv):
                         name, read, data["read_time"], matrix, data["matrix_time"],
                         values["size"], values["lumped"], values["ratio"], values["time"], 
                         values["unweighted"], values["positive"], values["disjoint"], values["reducing"],
-                        values["FL"], values["FE"], values["RWE"], values["RWE_has"],
+                        values["weighted_model"], values["FL"], values["FE"], values["RWE"], values["RWE_has"],
                         obs_set
                     ])
                 except KeyError as error:

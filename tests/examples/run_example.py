@@ -157,6 +157,7 @@ if __name__ == "__main__":
                 print(f"Is the lumping disjoint?: {lumped.is_disjoint()}", file=file)
                 print(f"Is the lumping reducing?: {lumped.is_reducing()}", file=file)
                 print(f"TYPE OF THE LUMPING:::", file=file)
+                print(f"Is the model weighted?: {lumped.old_system.is_weighted_system()}", file=file)
                 print(f"Is the lumping a Forward Lumping (FL)?: {lumped.is_FL()}", file=file)
                 print(f"Is the lumping a Forward Equivalence (FE)?: {lumped.is_FE()}", file=file)
                 print(f"Is the lumping a Robust Weighted Equivalence (RWE)?: {lumped.is_RWE()}", file=file)
