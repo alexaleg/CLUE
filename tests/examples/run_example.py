@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.join(SCRIPT_DIR, "..", "..")) # models and clue is he
 from contextlib import nullcontext
 from cProfile import Profile
 
-from clue import FODESystem, SparsePolynomial, Subspace, OrthogonalSubspace, UncertainFODESystem
+from clue import SparsePolynomial, Subspace, OrthogonalSubspace, UncertainFODESystem
 from examples_data import get_example #pylint: disable=import-error
 
 class Timeout(object):
@@ -44,6 +44,7 @@ if __name__ == "__main__":
     output = None
     profile = None
     subs_class = Subspace
+    save_systems = False
 
     ## Checking the rest of the arguments
     n = 2
@@ -60,6 +61,8 @@ if __name__ == "__main__":
             profile = True; n += 1
         elif(args[n] in ("--ortho", "--orthogonal", "-ortho", "-orthogonal")):
             subs_class = OrthogonalSubspace; n+=1
+        elif(args[n] in ("--save", "--s", "-save", "-s")):
+            save_systems = True; n+=1
     
     profile = example.profile_path(read, matrix) if profile else None
     output = example.results_path(read, matrix) if output is None else output
@@ -146,8 +149,9 @@ if __name__ == "__main__":
                 continue
             
             if(not lumped == None):
-                obs_str = str(tuple(obs_polys))
-                lumped.save(example.out_path(read, matrix, "too long" if len(obs_str) > 100 else tuple(obs_polys)), format="clue")
+                if save_systems:
+                    obs_str = str(tuple(obs_polys))
+                    lumped.save(example.out_path(read, matrix, "too long" if len(obs_str) > 100 else tuple(obs_polys)), format="clue")
                 print(f"The size of the original model is {lumped.old_system.size}", file=file)
                 print(f"The size of the reduced model is {lumped.size}", file=file)
                 print(f"Computation took {lumping_time} seconds", file=file)
