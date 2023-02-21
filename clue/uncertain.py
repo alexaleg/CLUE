@@ -5,7 +5,7 @@ from functools import cached_property
 
 from sympy import QQ, oo
 
-import sys
+import random, sys
 
 from .clue import FODESystem, LDESystem, SparseRowMatrix
 from .rational_function import SparsePolynomial
@@ -176,6 +176,10 @@ class UncertainFODESystem(FODESystem):
             yield equation[0]
             yield equation[1]
 
+    def is_weighted_system(self):
+        r'''Override from FODESystem'''
+        return True
+
     def check_consistency(self, *_): ## TODO
         r'''
             This method was removed for Uncertain systems
@@ -214,7 +218,7 @@ class UncertainFODESystem(FODESystem):
     ### Some special creation methods
     ##############################################################################################################
     @staticmethod
-    def from_FODESystem(system : FODESystem, delta = 2.5e-4, min_val = -oo, max_val = oo, only_existing = True, type="abs"):
+    def from_FODESystem(system : FODESystem, delta = 2.5e-4, min_val = -oo, max_val = oo, change_prob = 1.0, only_existing = True, type="abs"):
         r'''
             Method to create an uncertain system from a :class:`FODESystem` by altering all the coefficients with a given value `\delta`.
 
@@ -273,7 +277,8 @@ class UncertainFODESystem(FODESystem):
         
         for i in (range(system.size) if (type=="abs" and not only_existing) else m.nonzero.union(M.nonzero)):
             for j in (range(system.size) if (type=="abs" and not only_existing) else m[i].nonzero.union(M[i].nonzero)):
-                m[i,j] = __low_coeff(m[i,j]); M[i,j] = __up_coeff(M[i,j])
+                if random.random() < change_prob:
+                    m[i,j] = __low_coeff(m[i,j]); M[i,j] = __up_coeff(M[i,j])
 
         new_name = None if system.name is None else system.name + f"[altered by {f'+-{delta}' if type=='abs' else f'{100*delta}%'}]"
         return UncertainFODESystem(None, system.observables, system.variables, system.ic, new_name,(m,M))
