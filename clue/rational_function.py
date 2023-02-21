@@ -1599,7 +1599,7 @@ class RationalFunction:
         # Creating a parser instance if necessary
         if RationalFunction.__parser is None:
             fnumber = Regex(r"[+-]?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?")
-            ident = Word(alphas, alphanums + "_$")
+            ident = Regex(f"(\\d[{alphanums+'_$'}]*[{alphas}]+[{alphanums+'_$'}]*)|([{alphas}]+[{alphanums+'_$'}]*)") # Word(alphanums, alphanums + "_$") # ident = Word(alphas, alphanums + "_$")
             plus, minus, mult, div = map(Literal, "+-*/")
             lpar, rpar = map(Suppress, "()")
             addop = plus | minus
@@ -1610,7 +1610,7 @@ class RationalFunction:
             atom = (
                 addop[...]
                 + (
-                    (fnumber | ident).setParseAction(push_first)
+                    (ident | fnumber).setParseAction(push_first) # (fnumber | ident).setParseAction(push_first)
                     | Group(lpar + expr + rpar)
                 )
             ).setParseAction(push_unary_minus)
