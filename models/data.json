@@ -5187,7 +5187,8 @@
         "remote": {
             "where": "Networks-Skewed",
             "model": "arxiv_collab",
-            "name": "cond-mat-1999"
+            "name": "cond-mat-1999",
+            "vertices_name": "default"
         }
     },
     "eu_procurements_alt_SE_2009": {
@@ -5518,7 +5519,8 @@
         "remote": {
             "where": "Networks-Skewed",
             "model": "arxiv_collab",
-            "name": "cond-mat-2005"
+            "name": "cond-mat-2005", 
+            "vertices_name":"default"
         }
     },
     "eu_procurements_alt_NL_2012": {
@@ -5686,7 +5688,8 @@
         "remote": {
             "where": "Networks-Skewed",
             "model": "arxiv_collab",
-            "name": "astro-ph-1999"
+            "name": "astro-ph-1999",
+            "vertices_name":"default"
         }
     },
     "us_agencies_michigan": {
@@ -6238,7 +6241,8 @@
         "remote": {
             "where": "Networks-Skewed",
             "model": "arxiv_collab",
-            "name": "hep-th-1999"
+            "name": "hep-th-1999",
+            "vertices_name":"default"
         }
     },
     "eu_procurements_alt_NO_2008": {
@@ -6360,7 +6364,8 @@
         "remote": {
             "where": "Networks-Skewed",
             "model": "arxiv_collab",
-            "name": "cond-mat-2003"
+            "name": "cond-mat-2003",
+            "vertices_name":"default"
         }
     },
     "eu_procurements_alt_HU_2011": {

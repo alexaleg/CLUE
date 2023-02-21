@@ -29127,7 +29127,7 @@
         "matrix": "polynomial",
         "observables": [
             [
-                "KUHN, R"
+                "S2"
             ]
         ],
         "out_folder": "uncertain"
@@ -29137,7 +29137,7 @@
         "matrix": "polynomial",
         "observables": [
             [
-                "KUHN, R"
+                "S2"
             ]
         ],
         "out_folder": "uncertain",
@@ -31565,7 +31565,7 @@
         "matrix": "polynomial",
         "observables": [
             [
-                "STANEV, TKGT"
+                "S1"
             ]
         ],
         "out_folder": "uncertain"
@@ -31575,7 +31575,7 @@
         "matrix": "polynomial",
         "observables": [
             [
-                "STANEV, TKGT"
+                "S1"
             ]
         ],
         "out_folder": "uncertain",
@@ -34164,7 +34164,7 @@
         "matrix": "polynomial",
         "observables": [
             [
-                "CIMA, OMD"
+                "S2"
             ]
         ],
         "out_folder": "uncertain"
@@ -34174,7 +34174,7 @@
         "matrix": "polynomial",
         "observables": [
             [
-                "CIMA, OMD"
+                "S2"
             ]
         ],
         "out_folder": "uncertain",
