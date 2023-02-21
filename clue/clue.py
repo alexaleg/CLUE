@@ -374,7 +374,7 @@ class FODESystem:
         r'''Checks if any coefficient is not 0 or 1'''
         self.normalize()
         if issubclass(self.type, SparsePolynomial):
-            return any(any((not c in (0,1)) for c in equ.coefficients()) for equ in self.equations)
+            return any(any((not c in (0,1)) for c in equ.coefficients) for equ in self.equations)
         return True # if not sparse polynomials, then we considered weighted by default
 
     def all_equations(self):
