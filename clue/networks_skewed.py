@@ -32,7 +32,9 @@ def FromNetwork(network, name=None, column = -1, undirected=None, adjacency=True
             name_index=i; break
     
     varnames = vertices[vertices.columns[name_index]].tolist() if name_index != None else [f"S{i}" for i in range(len(vertices))]
-    if len(set(varnames)) < len(varnames): # repeated names --> better use generic
+    if kwds.pop("vertices_name", "") == "default":
+        varnames = [f"S{i}" for i in range(len(vertices))]
+    elif len(set(varnames)) < len(varnames): # repeated names --> better use generic
         logger.warning(f"[FromNetwork] Found repeated names in the vertices. Using generic names")
         varnames = [f"S{i}" for i in range(len(vertices))]
 
