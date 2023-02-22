@@ -75,118 +75,124 @@ if __name__ == "__main__":
     else:
         file = open(output, "w")
 
-    ## Starting profiler if there is any
-    with Profile() if profile else nullcontext() as pr:
-    ## Setting up the handler for the signal
-        total_time = time.time()
+    try:
 
-        print(f"[run_example] Reading example {example.name} ({read=})...", flush=True)
+        ## Starting profiler if there is any
+        with Profile() if profile else nullcontext() as pr:
+        ## Setting up the handler for the signal
+            total_time = time.time()
 
-        try: #Reading the file
-            with Timeout(timeout):
-                read_time = time.time()
-                ## now we can run the model properly
-                if read == "uncertain":
-                    system = example.get_model().load_system(parser="polynomial", range=example.range, lumping_subspace=subs_class)
-                    system = UncertainFODESystem.from_FODESystem(system, example.delta, type=example.unc_type)
-                else:
-                    system = example.get_model().load_system(parser=read, range=example.range, lumping_subspace=subs_class)
-                read_time = time.time() - read_time
-        except TimeoutError:
-            print(f"[run_example] Timeout ({timeout}) on {example.name} ({read=})", flush=True)
-            print(f"Timeout error detected: {timeout}", file=file)
-            print(f"Timeout while reading the .ode file", file=file)
-            # Closing the output file (if opened)
-            if(not output in ("stdout", "stderr")):
-                file.close()
-            # Saving the profile (if set)
-            if profile:
-                stats = pstats.Stats(pr)
-                stats.sort_stats(pstats.SortKey.TIME)
-                stats.dump_stats(filename=profile)
-            sys.exit(0)
-        
-        print(f"[run_example] Building matrices for {example.name} ({matrix=})...", flush=True)
-        try: #Building the matrices for lumping
-            with Timeout(timeout):
-                matrices_time = time.time()
-                system.construct_matrices(matrix)
-                matrices_time = time.time() - matrices_time
-        except TimeoutError:
-            print(f"[run_example] Timeout ({timeout}) on {example.name} ({matrix=})", flush=True)
-            print(f"Timeout error detected: {timeout}", file=file)
-            print(f"Timeout while building the matrices", file=file)
-            print(f"Time for reading the model: {read_time}", file=file)
-            # Closing the output file (if opened)
-            if(not output in ("stdout", "stderr")):
-                file.close()
-            # Saving the profile (if set)
-            if profile:
-                stats = pstats.Stats(pr)
-                stats.sort_stats(pstats.SortKey.TIME)
-                stats.dump_stats(filename=profile)
-            sys.exit(0)
-        print(f"[run_example] Running example {example.name} ({len(observables)} cases)...", flush=True)
-        for obs_set in observables:
-            print(f"[run_example]     ++ {example.name} (({observables.index(obs_set)+1}/{len(observables)}))", flush=True)
-            print("===============================================", file=file)
-            print(f"== Observables: {obs_set}", file=file)
-            obs_polys = [SparsePolynomial.from_string(s, system.variables, system.field) for s in obs_set]
+            print(f"[run_example] Reading example {example.name} ({read=})...", flush=True)
 
-            lumped = None
-            try:
+            try: #Reading the file
                 with Timeout(timeout):
-                    lumping_time = time.time()
-                    lumped = system.lumping(obs_polys, method=matrix, file=file)
-                    lumping_time = time.time() - lumping_time
+                    read_time = time.time()
+                    ## now we can run the model properly
+                    if read == "uncertain":
+                        system = example.get_model().load_system(parser="polynomial", range=example.range, lumping_subspace=subs_class)
+                        system = UncertainFODESystem.from_FODESystem(system, example.delta, type=example.unc_type)
+                    else:
+                        system = example.get_model().load_system(parser=read, range=example.range, lumping_subspace=subs_class)
+                    read_time = time.time() - read_time
             except TimeoutError:
+                print(f"[run_example] Timeout ({timeout}) on {example.name} ({read=})", flush=True)
                 print(f"Timeout error detected: {timeout}", file=file)
-                print("###############################################", file=file)
-                continue
-            except OverflowError:
-                print("Overflow error detected", file=file)
-                print("###############################################", file=file)
-                continue
+                print(f"Timeout while reading the .ode file", file=file)
+                # Closing the output file (if opened)
+                if(not output in ("stdout", "stderr")):
+                    file.close()
+                # Saving the profile (if set)
+                if profile:
+                    stats = pstats.Stats(pr)
+                    stats.sort_stats(pstats.SortKey.TIME)
+                    stats.dump_stats(filename=profile)
+                sys.exit(0)
             
-            if(not lumped == None):
-                if save_systems:
-                    obs_str = str(tuple(obs_polys))
-                    lumped.save(example.out_path(read, matrix, "too long" if len(obs_str) > 100 else tuple(obs_polys)), format="clue")
-                print(f"The size of the original model is {lumped.old_system.size}", file=file)
-                print(f"The size of the reduced model is {lumped.size}", file=file)
-                print(f"Computation took {lumping_time} seconds", file=file)
-                print(f"PROPERTIES OF THE LUMPING:::", file=file)
-                print(f"Is the lumping unweighted?: {lumped.is_unweighted()}", file=file)
-                print(f"Is the lumping positive?: {lumped.is_positive()}", file=file)
-                print(f"Is the lumping disjoint?: {lumped.is_disjoint()}", file=file)
-                print(f"Is the lumping reducing?: {lumped.is_reducing()}", file=file)
-                print(f"TYPE OF THE LUMPING:::", file=file)
-                print(f"Is the model weighted?: {lumped.old_system.is_weighted_system()}", file=file)
-                print(f"Is the lumping a Forward Lumping (FL)?: {lumped.is_FL()}", file=file)
-                print(f"Is the lumping a Forward Equivalence (FE)?: {lumped.is_FE()}", file=file)
-                print(f"Is the lumping a Robust Weighted Equivalence (RWE)?: {lumped.is_RWE()}", file=file)
-                print(f"Has the lumping a Robust Weighted Lumping (RWE)?: {lumped.has_RWE()}", file=file)
-            else:
-                print(f"The example could not finish in the given timeout ({timeout}", file=file)
-            print("###############################################", file=file)
-            print(f"[run_example]     -- {example.name} (({observables.index(obs_set)+1}/{len(observables)})) (Done)", flush=True)
+            print(f"[run_example] Building matrices for {example.name} ({matrix=})...", flush=True)
+            try: #Building the matrices for lumping
+                with Timeout(timeout):
+                    matrices_time = time.time()
+                    system.construct_matrices(matrix)
+                    matrices_time = time.time() - matrices_time
+            except TimeoutError:
+                print(f"[run_example] Timeout ({timeout}) on {example.name} ({matrix=})", flush=True)
+                print(f"Timeout error detected: {timeout}", file=file)
+                print(f"Timeout while building the matrices", file=file)
+                print(f"Time for reading the model: {read_time}", file=file)
+                # Closing the output file (if opened)
+                if(not output in ("stdout", "stderr")):
+                    file.close()
+                # Saving the profile (if set)
+                if profile:
+                    stats = pstats.Stats(pr)
+                    stats.sort_stats(pstats.SortKey.TIME)
+                    stats.dump_stats(filename=profile)
+                sys.exit(0)
+            print(f"[run_example] Running example {example.name} ({len(observables)} cases)...", flush=True)
+            for obs_set in observables:
+                print(f"[run_example]     ++ {example.name} (({observables.index(obs_set)+1}/{len(observables)}))", flush=True)
+                print("===============================================", file=file)
+                print(f"== Observables: {obs_set}", file=file)
+                obs_polys = [SparsePolynomial.from_string(s, system.variables, system.field) for s in obs_set]
 
-        print(f"[run_example] ## Finished example {example.name} ##", flush=True)
+                lumped = None
+                try:
+                    with Timeout(timeout):
+                        lumping_time = time.time()
+                        lumped = system.lumping(obs_polys, method=matrix, file=file)
+                        lumping_time = time.time() - lumping_time
+                except TimeoutError:
+                    print(f"Timeout error detected: {timeout}", file=file)
+                    print("###############################################", file=file)
+                    continue
+                except OverflowError:
+                    print("Overflow error detected", file=file)
+                    print("###############################################", file=file)
+                    continue
+                
+                if(not lumped == None):
+                    if save_systems:
+                        obs_str = str(tuple(obs_polys))
+                        lumped.save(example.out_path(read, matrix, "too long" if len(obs_str) > 100 else tuple(obs_polys)), format="clue")
+                    print(f"The size of the original model is {lumped.old_system.size}", file=file)
+                    print(f"The size of the reduced model is {lumped.size}", file=file)
+                    print(f"Computation took {lumping_time} seconds", file=file)
+                    print(f"PROPERTIES OF THE LUMPING:::", file=file)
+                    print(f"Is the lumping unweighted?: {lumped.is_unweighted()}", file=file)
+                    print(f"Is the lumping positive?: {lumped.is_positive()}", file=file)
+                    print(f"Is the lumping disjoint?: {lumped.is_disjoint()}", file=file)
+                    print(f"Is the lumping reducing?: {lumped.is_reducing()}", file=file)
+                    print(f"TYPE OF THE LUMPING:::", file=file)
+                    print(f"Is the model weighted?: {lumped.old_system.is_weighted_system()}", file=file)
+                    print(f"Is the lumping a Forward Lumping (FL)?: {lumped.is_FL()}", file=file)
+                    print(f"Is the lumping a Forward Equivalence (FE)?: {lumped.is_FE()}", file=file)
+                    print(f"Is the lumping a Robust Weighted Equivalence (RWE)?: {lumped.is_RWE()}", file=file)
+                    print(f"Has the lumping a Robust Weighted Lumping (RWE)?: {lumped.has_RWE()}", file=file)
+                else:
+                    print(f"The example could not finish in the given timeout ({timeout}", file=file)
+                print("###############################################", file=file)
+                print(f"[run_example]     -- {example.name} (({observables.index(obs_set)+1}/{len(observables)})) (Done)", flush=True)
+
+            print(f"[run_example] ## Finished example {example.name} ##", flush=True)
+            
+            ## Reverting changes
+            total_time = time.time() - total_time
+            print("===============================================", file=file)
+            print("== END OF EXAMPLES", file=file)
+            print(f"Time for reading the model: {read_time}", file=file)
+            print(f"Time for building matrices: {matrices_time}", file=file)
+            print(f"Total time in execution: {total_time}", file=file)
+
+        # Saving the profile (if set)
+        if profile:
+            stats = pstats.Stats(pr)
+            stats.sort_stats(pstats.SortKey.TIME)
+            stats.dump_stats(filename=profile)
+    except Exception as error:
+        print(f"Error during execution -> {error}", file=file)
+        print(f"[run_example] %% ERROR in {example.name} --> {error}")
+    finally:    
+        # Closing the output file (if opened)
+        if(not output in ("stdout", "stderr")):
+            file.close()
         
-        ## Reverting changes
-        total_time = time.time() - total_time
-        print("===============================================", file=file)
-        print("== END OF EXAMPLES", file=file)
-        print(f"Time for reading the model: {read_time}", file=file)
-        print(f"Time for building matrices: {matrices_time}", file=file)
-        print(f"Total time in execution: {total_time}", file=file)
-
-    
-    # Closing the output file (if opened)
-    if(not output in ("stdout", "stderr")):
-        file.close()
-    # Saving the profile (if set)
-    if profile:
-        stats = pstats.Stats(pr)
-        stats.sort_stats(pstats.SortKey.TIME)
-        stats.dump_stats(filename=profile)
