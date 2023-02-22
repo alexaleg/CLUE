@@ -4,7 +4,7 @@ from sympy import QQ, CoercionFailed
 
 from .clue import FODESystem
 from .linalg import SparseRowMatrix
-from .rational_function import SparsePolynomial
+from .rational_function import SparsePolynomial, ParseException
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +37,12 @@ def FromNetwork(network, name=None, column = -1, undirected=None, adjacency=True
     elif len(set(varnames)) < len(varnames): # repeated names --> better use generic
         logger.warning(f"[FromNetwork] Found repeated names in the vertices. Using generic names")
         varnames = [f"S{i}" for i in range(len(vertices))]
+    else:
+        try:
+            [SparsePolynomial.from_string(v, varnames) for v in varnames]
+        except ParseException:
+            logger.warning(f"[FromNetwork] Found non-parseable variable. Using generic names")
+            varnames = [f"S{i}" for i in range(len(vertices))]
 
     logger.info(f"[FromNetwork] Building {'adjacency' if adjacency else 'laplacian'} matrix...")
     equations = SparseRowMatrix(len(varnames))
