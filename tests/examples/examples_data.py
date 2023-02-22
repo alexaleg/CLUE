@@ -224,6 +224,72 @@ def list_examples(*argv):
     else:
         print(" ".join([name for name in examples if filter(name)]))
 
+def add_example(name: str, model: models.models_data.Model, 
+    read : list[str], matrix: list[str],
+    output: str, out_folder: str = None,
+    subs: bool = False
+) -> bool:
+    # checking we can do everything
+    if "uncertain" in read and model.type == "rational":
+        raise TypeError("Found a 'rational' model and required an 'uncertain'")
+
+    print(f"## Processing examples for model {name}".ljust(100, "."))
+
+    ## Deciding the range of the model (if exist)
+    rng = model.range; rng = [None] if len(rng) == 0 else rng
+    print(f"### {rng=} ; {read=} ; {matrix=}")
+    changed = False
+    for X in rng:
+        ## Reading the file and getting observables
+        try:
+            system = model.load_system(parser=read[0], range=X)
+            system_variables = system.species
+        except:
+            system_variables = read_variables_from_system(model.path())
+            
+        ## Deciding observables
+        print(f"### Deciding observables (criteria {output=})")
+        obs = []
+        if output in ("first", "all") :
+            print(f"#### Adding the first variable as observable")
+            obs.append([system_variables[0]])
+        if output in ("sum", "all"):
+            print(f"#### Adding the sum of everything as observable")
+            obs.append([" + ".join(system_variables)])
+        if output in ("alone", "all"):
+            print(f"#### Adding all variables alone as observables")
+            obs.extend([[system_variables[i]] for i in range(0 if output == "alone" else 1, len(system_variables))])
+
+        print(f"### Found {len(obs)} set of observables for range [{X}]")
+        for r in read:
+            for m in matrix:
+                # Deciding the final name of the example
+                extra = []
+                if name in examples and examples[name].read != r: extra.append(r)
+                if X != None: extra.append(X)
+                extra = f"[{'#'.join(extra)}]" if len(extra) > 0 else ''
+                final_name = f"{name}{extra}"
+                # Deciding the extra arguments for the example
+                kwds = {}
+                if final_name != name: kwds["model"] = name
+                if out_folder != None: kwds["out_folder"] = out_folder
+                if X != None: kwds["range"] = X
+                if r == "uncertain": kwds["delta"] = 0.1; kwds["unc_type"] = "prop"
+                
+                if (not final_name in examples) or subs:
+                    examples[final_name] = Example(final_name, r, m, obs, **kwds)
+                    print(f"### Added the example {final_name}")
+                    changed = True
+    
+    print(f"## Finished examples for model {name}".ljust(100, "."))
+    return changed
+
+def save_json():
+    print("## Dumping data...", end=" ")
+    with open(os.path.join(SCRIPT_DIR,'data.json'), "w") as f:
+        json.dump({example : examples[example].as_json() for example in examples}, f, indent = 4)
+    print("Done")
+    
 def add_examples_in_folder(*argv):
     read = []; matrix = []; o = None; O = None; folders = []; subs=False
     i = 0
@@ -257,64 +323,10 @@ def add_examples_in_folder(*argv):
     changed = False
     for (name, model) in models.models_data.models.items():
         if model.folder() in folders: # this model must be added
-            # checking we can do everything
-            if "uncertain" in read and model.type == "rational":
-                raise TypeError("Found a 'rational' model and required an 'uncertain'")
-
-            print(f"## Processing examples for model {name}".ljust(100, "."))
-
-            ## Deciding the range of the model (if exist)
-            rng = model.range; rng = [None] if len(rng) == 0 else rng
-            print(f"### {rng=} ; {read=} ; {matrix=}")
-            for X in rng:
-                ## Reading the file and getting observables
-                try:
-                    system = model.load_system(parser=read[0], range=X)
-                    system_variables = system.species
-                except:
-                    system_variables = read_variables_from_system(model.path())
-                    
-                ## Deciding observables
-                print(f"### Deciding observables (criteria {O=})")
-                obs = []
-                if O in ("first", "all") :
-                    print(f"#### Adding the first variable as observable")
-                    obs.append([system_variables[0]])
-                if O in ("sum", "all"):
-                    print(f"#### Adding the sum of everything as observable")
-                    obs.append([" + ".join(system_variables)])
-                if O in ("alone", "all"):
-                    print(f"#### Adding all variables alone as observables")
-                    obs.extend([[system_variables[i]] for i in range(0 if O == "alone" else 1, len(system_variables))])
-
-                print(f"### Found {len(obs)} set of observables for range [{X}]")
-                for r in read:
-                    for m in matrix:
-                        # Deciding the final name of the example
-                        extra = []
-                        if name in examples and examples[name].read != r: extra.append(r)
-                        if X != None: extra.append(X)
-                        extra = f"[{'#'.join(extra)}]" if len(extra) > 0 else ''
-                        final_name = f"{name}{extra}"
-                        # Deciding the extra arguments for the example
-                        kwds = {}
-                        if final_name != name: kwds["model"] = name
-                        if o != None: kwds["out_folder"] = o
-                        if X != None: kwds["range"] = X
-                        if r == "uncertain": kwds["delta"] = 0.1; kwds["unc_type"] = "prop"
-                        
-                        if (not final_name in examples) or subs:
-                            examples[final_name] = Example(final_name, r, m, obs, **kwds)
-                            print(f"### Added the example {final_name}")
-                            changed = True
-            
-            print(f"## Finished examples for model {name}".ljust(100, "."))
+            changed = changed or add_example(name, model, read, matrix, O, o, subs)
     
     if changed:
-        print("## Dumping data...", end=" ")
-        with open(os.path.join(SCRIPT_DIR,'data.json'), "w") as f:
-            json.dump({example : examples[example].as_json() for example in examples}, f, indent = 4)
-        print("Done")
+        save_json()
 
 def compile_results(*argv):
     if len(argv) > 0: raise TypeError("No optional arguments for command 'compile'. See ''help'' for further information")
