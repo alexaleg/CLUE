@@ -149,6 +149,10 @@ if __name__ == "__main__":
                     print("Overflow error detected", file=file)
                     print("###############################################", file=file)
                     continue
+                except KeyboardInterrupt:
+                    print(f"Keyboard interrupt detected", file=file)
+                    print("###############################################", file=file)
+                    break
                 
                 if(not lumped == None):
                     if save_systems:

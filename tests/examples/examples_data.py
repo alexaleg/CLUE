@@ -337,7 +337,7 @@ def compile_results(*argv):
         data = {} 
         data["observables"] = {}
         default_data = {
-            'size': "oo", 'lumped': "oo", 'ratio': "NaN", "time": "oo",
+            'size': "oo", 'lumped': "oo", 'ratio': "NaN", "time": float("inf"),
             "unweighted": "Not computed", "positive": "Not computed", "disjoint": "Not computed", "reducing": "Not computed",
             "weighted_model": "Not computed", "FL": "Not computed", "FE": "Not computed", "RWE": "Not computed", "RWE_has": "Not computed"
         }
@@ -386,7 +386,10 @@ def compile_results(*argv):
                                 elif line.startswith("Overflow error detected"): # an error of size in execution
                                     data["observables"][obs_set]["time"] = "Overflow error"
                                 elif line.startswith("Timeout error detected: "): # an error of size in execution
-                                    data["observables"][obs_set]["time"] = f">{line.removeprefix('The size of the reduced model is')}"
+                                    data["observables"][obs_set]["time"] = float("inf")
+                                elif line.startswith("Keyboard interrupt detected"): # an error of size in execution
+                                    data["observables"][obs_set]["time"] = f"Keyboard interruption"
+                                    print(f"[example_data - compile] ERROR {name} ({read=} -- {matrix=}): Keyboard Interrupt detected")
                                 line = file.readline()
 
                             ## Computing the ratio if possible
@@ -404,17 +407,17 @@ def compile_results(*argv):
                                 elif line.startswith("Total time in execution: "):
                                     data["total_time"] = float(line.removeprefix("Total time in execution: "))
                                 line = file.readline()
-                            if not "read_time" in data: data["read_time"] = "oo"
-                            if not "matrix_time" in data: data["read_time"] = "oo"
-                            if not "total_time" in data: data["read_time"] = "oo"
+                            if not "read_time" in data: data["read_time"] = float("inf")
+                            if not "matrix_time" in data: data["read_time"] = float("inf")
+                            if not "total_time" in data: data["read_time"] = float("inf")
                     elif line.startswith("Timeout while reading"):
                         data["observables"]["Unknown"] = {**default_data}
-                        data["read_time"] = "oo"; data["matrix_time"] = "oo"; data["total_time"] = "oo"
+                        data["read_time"] = float("inf"); data["matrix_time"] = float("inf"); data["total_time"] = float("inf")
                         line = file.readline().strip()
                     elif line.startswith("Timeout while building the matrices"):
                         data["observables"]["Unknown"] = {**default_data}
                         data["read_time"] = float(file.readline().removeprefix("Time for reading the model: "))
-                        data["matrix_time"] = "oo"; data["total_time"] = "oo"
+                        data["matrix_time"] = float("inf"); data["total_time"] = float("inf")
                         line = file.readline().strip()
                     else:
                         line = file.readline().strip()
