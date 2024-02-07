@@ -1692,7 +1692,11 @@ class FODESystem:
                 tpoints.append(tpoints[-1] + tstep)
         tpoints.append(t1)
 
-        simulation = solve_ivp(self.derivative, (t0,t1), x0, t_eval=tpoints, **kwds)
+        # simulation = solve_ivp(self.derivative, (t0,t1), x0, t_eval=tpoints, **kwds)
+        from scipy.integrate import odeint
+        from scipy.integrate._ivp.ivp import OdeResult
+        simulation = odeint(lambda y, t : self.derivative(t,y), x0, tpoints)
+        simulation = OdeResult(y=simulation, t=tpoints, success=True)
         # adding the names to the simulation
         simulation.names = self.variables
         return simulation
