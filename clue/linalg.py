@@ -339,6 +339,9 @@ class SparseVector():
 
         return output
 
+    def get_data(self):
+        return self.__data
+
     # --------------------------------------------------------------------------
 
     def inner_product(self, rhs: SparseVector):
@@ -436,7 +439,7 @@ class SparseVector():
     # --------------------------------------------------------------------------
 
     def is_zero(self):
-        r"""Method to check whether a vector is zero or not"""
+        r"""Method to check whether a matrix is zero or not"""
         return len(self.nonzero) == 0
 
     # --------------------------------------------------------------------------
@@ -450,13 +453,13 @@ class SparseVector():
     # --------------------------------------------------------------------------
 
     def to_list(self):
-        r"""Method to transform a :class:`SparseVector` into a list"""
+        r"""Method to transform a :class:`SparseRowMatrix` into a list"""
         result = [0] * self.dim
         for i in self.nonzero:
             result[i] = self.__data[i]
         return result
 
-    # --------------------------------------------------------------------------
+        # --------------------------------------------------------------------------
 
     def nonzero_count(self):
         r"""Method to compute the number of non-zero entries of a vector"""
@@ -980,6 +983,18 @@ class SparseRowMatrix():
         from numpy import array
 
         return array(self.to_list(), dtype=dtype)
+
+    def to_coo(self)->tuple[list[int],list[int],list[Any]]:
+        r"""Method to transform a :class:`SparseRowMatrix` into COOrdinate list format"""
+        rows = []
+        columns = []
+        values = []
+        for row, vector in self.__data.items():
+            for column,value in vector.get_data().items():
+                rows.append(row)
+                columns.append(column)
+                values.append(value)
+        return rows,columns,values
 
     def pretty_print(self):
         r"""Method to generate a pretty printing of the Sparse matrix"""
