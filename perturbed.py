@@ -1,15 +1,18 @@
 from clue import *
 # from sympy import RR
+import numpy as np
 from clue.field import RR
 RR = RR()
 from cProfile import Profile
 import ipdb
+import pandas as pd
 import signal,random,time,json,pstats,logging
 
 random.seed(30)
 
 logger = logging.getLogger("clue." + __name__)
 logger.setLevel(logging.DEBUG)
+logging.root.setLevel(logging.DEBUG)
 
 class Timeout(object):
     def __init__(self, seconds):
@@ -96,6 +99,9 @@ def remove_parameters(model: FODESystem) -> FODESystem:
                       pars=new_pars)
 
 def run_simulations(low, high):
+    simulations = []
+    results = []
+
     for i in range(low,high):
         path=f'models/polynomial/ProteinPhosphorylation[{i}].ode'
         logger.info(f"Running example {path}")
@@ -131,7 +137,8 @@ def run_simulations(low, high):
         try:
             with Timeout(60*60*60):
                 time_0 = time.time()
-                lumped, tries = PP2_pert.app_lumping(['S0'], max_size=10, threshold=1e-6, with_tries=True,out_format='internal')
+                lumped, tries = PP2_pert.app_lumping(['S0'], max_size=10, threshold=1e-10, with_tries=True,out_format='internal')
+                print(lumped)
                 time_lumping = time.time()-time_0
                 result['reduction_size'] = lumped.size
                 result['iterations'] = tries
@@ -174,6 +181,15 @@ def run_simulations(low, high):
             results.append(result)
             continue
 
+        sim_name = f'simulations[{i}]'
+        sims = {'exact': [sim1.t, np.array(sim1.y[0])], 'reduced': [sim2.t, np.array(sim2.y[0])]}
+        sims_data= pd.DataFrame.from_dict(sims)
+        sims_data.to_csv(sim_name)
+
+        # with open(sim_name+'.json', 'w', encoding='utf-8') as f:
+            # json.dump(sims, f, ensure_ascii=False, indent=4)
+
+
 
         error = sim1.y[0] - sim2.y[0]
 
@@ -192,6 +208,10 @@ def run_simulations(low, high):
         with open(name+'.json', 'w', encoding='utf-8') as f:
             json.dump(result, f, ensure_ascii=False, indent=4)
 
+        simulations.append((sim1,sim2))
+        results.append(result)
+    return simulations, results
+
 
 
 if __name__ == "__main__":
@@ -200,12 +220,12 @@ if __name__ == "__main__":
     results = []
 
     with Profile() as pr: 
-        run_simulations(low,high)
+        simulations, results = run_simulations(low,high)
         stats = pstats.Stats(pr)
-        stats.dump_stats(filename=f'perturbed[{low}-{high}]_RR4.prof')
-
-    # print(results)
-    # merged = merge_simulations(sim1,sim2)
-
-    # create_figure(merged)
+        stats.dump_stats(filename=f'perturbed[{low}-{high}]npfloat64.prof')
+    
+    for sims in simulations:
+        sim1,sim2= sims
+        merged = merge_simulations(sim1,sim2)
+        create_figure(merged)
 

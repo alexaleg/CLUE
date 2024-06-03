@@ -2436,6 +2436,7 @@ class FODESystem:
                     row.reduce(-self.field.one, row.apply_matrix(subspace.projector))
                 logger.debug("[find_maximal_threshold] Computing maximal norm")
                 epsilon = math.sqrt(max(el.inner_product(el) for el in rows))
+                logger.debug(f"[find_maximal_threshold] Maximal epsilon={epsilon}")
                 self.__cache_thresholds[key] = epsilon
 
         return self.__cache_thresholds[key]
@@ -2749,7 +2750,6 @@ class FODESystem:
                 left_eps, right_eps, right_size = left_eps, epsilon, n_epsilon
             elif n_epsilon >= max_n:
                 left_eps, right_eps, left_size = epsilon, right_eps, n_epsilon
-                break
             logger.debug(
                 f"[find_reduction_given_size] New interval search: [{left_eps},{right_eps}]"
             )

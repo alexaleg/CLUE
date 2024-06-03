@@ -255,6 +255,8 @@ class SparseVector():
                 self.__data[i] = self.__data[i] * coef
 
     # --------------------------------------------------------------------------
+    def get_data(self):
+        return self.__data
 
     def __getitem__(self, i: int):
         if i < 0 or i >= self.dim:
@@ -803,6 +805,7 @@ class SparseRowMatrix():
             return self.__data[i][j] if i in self.nonzero else self.field.zero
 
     # --------------------------------------------------------------------------
+
 
     def increment(self, i: int, j: int, extra: Any):
         r"""
